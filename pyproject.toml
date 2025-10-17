@@ -1,7 +1,7 @@
 [project]
 name = "longcat-xcode-bridge"
 version = "0.1.0"
-description = "A lightweight proxy server that makes the LongCat API compatible with Xcode's local AI model feature."
+description = "A lightweight proxy to use LongCat-Flash-Thinking model with Xcode 26 Intelligence."
 readme = "README.md"
 requires-python = ">=3.8"
 license = { file = "LICENSE" }

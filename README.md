@@ -6,7 +6,7 @@ A lightweight proxy server that makes the LongCat API (specifically the `longcat
 
 ## The Problem
 
-Xcode 26's Inelligence AI mode feature requires an API endpoint that lists available models (typically `/v1/models`). The LongCat API does not provide this, making direct integration impossible.
+Xcode 26's Intelligence AI mode feature requires an API endpoint that lists available models (typically `/v1/models`). The LongCat API does not provide this, making direct integration impossible.
 
 ## The Solution
 
