@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.8"
 license = { file = "LICENSE" }
 authors = [
-  { name="Oleksiy Maliovanyy", email="Oleksiy.Maliovanyy@gmail.com" }
+  { name="OleksiyM", email="oleksiymaliovanyy@gmail.com" }
 ]
 dependencies = [
     "fastapi>=0.115",
