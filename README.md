@@ -74,9 +74,20 @@ uv run main.py
 
 You can now select the `longcat-flash-thinking` model for code completion and other Intelligence features in Xcode.
 
+## About LongCat & Useful Links
+
+For those unfamiliar, LongCat is a family of large language models developed by Meituan. They are designed to be powerful, efficient, and capable of handling a wide range of tasks. This bridge specifically uses the `longcat-flash-thinking` model, which is optimized for speed and code-related tasks.
+
+Here are some official links to learn more:
+
+-   **[LongCat on GitHub](https://github.com/meituan-longcat):** The official source code and repositories.
+-   **[LongCat on Hugging Face](https://huggingface.co/meituan-longcat):** Models, datasets, and demos.
+-   **[Platform Documentation](https://longcat.chat/platform/docs/):** Official guides and documentation for the LongCat platform.
+-   **[API Usage Dashboard](https://longcat.chat/platform/usage/):** Monitor your API token usage.
+
 ## Disclaimer
 
-This project is not affiliated with, endorsed by, or connected to Apple Inc. or the LongCat team. It is an independent tool created for personal and community use.
+This project is not affiliated with, endorsed by, or connected to Apple Inc. or the LongCat team. It is an independent tool for personal and community use.
 
 ## License
 
