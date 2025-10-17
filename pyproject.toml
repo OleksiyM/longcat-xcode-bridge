@@ -1,0 +1,14 @@
+[project]
+name = "longcat-xcode-bridge"
+version = "0.1.0"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.34",
+    "httpx>=0.27",
+]
+
+[tool.uv]
+package = false
+
+[project.scripts]
+serve = "uvicorn:main"        # uv run serve → uvicorn main:app
