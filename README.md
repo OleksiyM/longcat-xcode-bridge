@@ -2,11 +2,11 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A lightweight proxy server that makes the LongCat API (specifically the `longcat-flash-thinking` model) compatible with Xcode 16's local AI model feature.
+A lightweight proxy server that makes the LongCat API (specifically the `longcat-flash-thinking` model) compatible with Xcode 26's local AI model feature.
 
 ## The Problem
 
-Xcode 16's "Locally Hosted" AI model feature requires an API endpoint that lists available models (typically `/v1/models`). The LongCat API does not provide this, making direct integration impossible.
+Xcode 26's Inelligence AI mode feature requires an API endpoint that lists available models (typically `/v1/models`). The LongCat API does not provide this, making direct integration impossible.
 
 ## The Solution
 
@@ -17,7 +17,7 @@ This bridge acts as a middleman:
 
 ## Features
 
--   **Xcode 16 Compatibility:** Enables the use of `longcat-flash-thinking` directly within Xcode.
+-   **Xcode 26 Compatibility:** Enables the use of `longcat-flash-thinking` directly within Xcode.
 -   **Zero-Configuration:** Works out of the box by setting one environment variable.
 -   **Lightweight & Fast:** Built with FastAPI and Uvicorn for minimal overhead.
 -   **Stream Aggregation:** Intelligently handles API stream differences between LongCat and Xcode.
@@ -32,7 +32,7 @@ This bridge acts as a middleman:
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/your-username/longcat-xcode-bridge.git
+    git clone https://github.com/OleksiyM/longcat-xcode-bridge.git
     cd longcat-xcode-bridge
     ```
 
@@ -68,7 +68,7 @@ uv run main.py
 
 1.  In Xcode, go to **Settings > Intelligence**.
 2.  Click the **+** button at the bottom of the providers list and select **Locally Hosted...**.
-3.  For the **Base URL**, enter `http://localhost:8000`.
+3.  For the **Port**, enter `8000`.
 4.  Give it a descriptive name, like "Local LongCat Bridge".
 5.  Click **Add**.
 
