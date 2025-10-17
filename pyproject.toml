@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.8"
 license = { file = "LICENSE" }
 authors = [
-  { name="Alex Malovanyy", email="alex.malovanyy@gmail.com" }
+  { name="Oleksiy Maliovanyy", email="Oleksiy.Maliovanyy@gmail.com" }
 ]
 dependencies = [
     "fastapi>=0.115",
@@ -24,6 +24,3 @@ classifiers = [
 
 [tool.uv]
 package = false
-
-[project.scripts]
-serve = "uvicorn:main"        # uv run serve → uvicorn main:app
