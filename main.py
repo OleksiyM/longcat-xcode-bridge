@@ -1,15 +1,15 @@
 import os
 import json
 import asyncio
-from fastapi import FastAPI, Request, HTTPException
+import time
+from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse
 import httpx
 
-app = FastAPI(title="LongCat-Flash-Tinking ↔ Xcode 26+ bridge")
+app = FastAPI(title="LongCat-Flash-Thinking ↔ Xcode 26+ bridge")
 
 # ---------- Settings ----------
-REAL_BASE   = os.getenv("LONGBASE", "https://api.longcat.chat/openai")
-#REAL_BASE   = os.getenv("LONGBASE", "https://api.longcat.chat/anthropic")
+REAL_BASE   = os.getenv("LONGCAT_BASE", "https://api.longcat.chat/openai")
 API_KEY     = os.getenv("LONGCAT_API_KEY", "")
 MODEL_NAME  = "longcat-flash-thinking"
 MAX_TOKENS  = 8192
@@ -17,7 +17,7 @@ MAX_TOKENS  = 8192
 SHOW_THINKING = False
 
 if not API_KEY:
-    raise RuntimeError("No API key found. Please set LC_API_KEY: export LONGCAT_API_KEY=...")
+    raise RuntimeError("No API key found. Please set LONGCAT_API_KEY: export LONGCAT_API_KEY=...")
 
 
 # ---------- Endpoints ----------
@@ -42,6 +42,10 @@ async def stream_aggregator(body: dict):
     model_name = None
     finish_reason = None
     usage = None
+    
+    # Timing and statistics
+    start_time = time.time()
+    first_token_time = None
 
     try:
         async with httpx.AsyncClient(timeout=120) as client:
@@ -68,6 +72,10 @@ async def stream_aggregator(body: dict):
                     except json.JSONDecodeError:
                         continue  # Ignore broken chunks
 
+                    # Record time to first token
+                    if first_token_time is None:
+                        first_token_time = time.time()
+
                     if not response_id:
                         response_id = chunk.get("id")
                         created_time = chunk.get("created")
@@ -82,17 +90,51 @@ async def stream_aggregator(body: dict):
 
                     if fr := choice.get("finish_reason"):
                         finish_reason = fr
-
+                    
                     if u := chunk.get("usage"):
                         usage = u
 
     except httpx.HTTPStatusError as e:
         print(f"Upstream HTTP error: {e.response.status_code} - {e.response.text}")
+        yield f"data: {json.dumps({'error': e.response.text})}\n\n"
+        yield "data: [DONE]\n\n"
         return  # End the stream if the upstream fails.
 
     if not response_id:
         print("Did not receive any valid data from upstream API")
+        yield "data: [DONE]\n\n"
         return
+
+    # Calculate timing and statistics
+    end_time = time.time()
+    total_time = end_time - start_time
+    if first_token_time:
+        time_to_first_token = first_token_time - start_time
+    else:
+        time_to_first_token = 0
+    
+    # Get token counts
+    input_tokens = 0
+    output_tokens = 0
+    total_tokens = 0
+    
+    if usage:
+        input_tokens = usage.get("prompt_tokens", 0)
+        output_tokens = usage.get("completion_tokens", 0)
+        total_tokens = usage.get("total_tokens", 0)
+    else:
+        # Fallback: estimate output tokens by counting words
+        output_tokens = len(full_content.split())
+        total_tokens = output_tokens  # Without input tokens, we can't calculate total
+
+    # Calculate speed
+    if total_time > 0:
+        tokens_per_second = output_tokens / total_time
+    else:
+        tokens_per_second = 0
+
+    # Print compact statistics to console with INFO prefix and tabulation
+    print(f"INFO:     Tokens: {total_tokens} ↑{input_tokens} ↓{output_tokens} | {time_to_first_token*1000:.0f} ms to first token | {tokens_per_second:.0f} tok/sec")
 
     final_content = ""
     if SHOW_THINKING and reasoning_content:
@@ -109,7 +151,7 @@ async def stream_aggregator(body: dict):
             {
                 "index": 0,
                 "delta": {"content": final_content},
-                "finish_reason": finish_reason,
+                "finish_reason": finish_reason or "stop",
             }
         ],
     }
@@ -125,7 +167,7 @@ async def stream_aggregator(body: dict):
 @app.post("/v1/chat/completions")
 async def chat_completions(request: Request):
     """
-    Proxies the request to LongCat-Flash, always requesting a stream.
+    Proxies the request to LongCat-Flash-Thinking, always requesting a stream.
     The stream is then aggregated into a single chunk and sent back as a
     single-element stream for Xcode compatibility.
     """
@@ -140,4 +182,4 @@ async def chat_completions(request: Request):
 # ---------- App Launch ----------
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True, log_level="info")
