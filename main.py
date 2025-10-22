@@ -11,7 +11,8 @@ app = FastAPI(title="LongCat-Flash-Thinking ↔ Xcode 26+ bridge")
 # ---------- Settings ----------
 REAL_BASE   = os.getenv("LONGCAT_BASE", "https://api.longcat.chat/openai")
 API_KEY     = os.getenv("LONGCAT_API_KEY", "")
-MODEL_NAME  = "longcat-flash-thinking"
+MODEL_NAME_THINKING = "longcat-flash-thinking"
+MODEL_NAME_FLASH = "longcat-flash-chat"
 MAX_TOKENS  = 8192
 # SHOW_THINKING = True
 SHOW_THINKING = False
@@ -26,7 +27,10 @@ async def list_models():
     """Provides an OpenAI-compatible list of models, as required by Xcode."""
     return {
         "object": "list",
-        "data": [{"id": MODEL_NAME, "object": "model", "owned_by": "longcat"}],
+        "data": [
+            {"id": MODEL_NAME_THINKING, "object": "model", "owned_by": "longcat"},
+            {"id": MODEL_NAME_FLASH, "object": "model", "owned_by": "longcat"}
+        ],
     }
 
 
@@ -85,8 +89,10 @@ async def stream_aggregator(body: dict):
                     if delta := choice.get("delta"):
                         if content_part := delta.get("content"):
                             full_content += content_part
-                        if reasoning_part := delta.get("reasoning_content"):
-                            reasoning_content += reasoning_part
+                        # Only process reasoning content for thinking model
+                        if body.get("model") == MODEL_NAME_THINKING:
+                            if reasoning_part := delta.get("reasoning_content"):
+                                reasoning_content += reasoning_part
 
                     if fr := choice.get("finish_reason"):
                         finish_reason = fr
@@ -134,10 +140,11 @@ async def stream_aggregator(body: dict):
         tokens_per_second = 0
 
     # Print compact statistics to console with INFO prefix and tabulation
-    print(f"INFO:     Tokens: {total_tokens} ↑{input_tokens} ↓{output_tokens} | {time_to_first_token*1000:.0f} ms to first token | {tokens_per_second:.0f} tok/sec")
+    print(f"INFO:     Model: {model_name or body.get('model') or MODEL_NAME_THINKING} | Tokens: {total_tokens} ↑{input_tokens} ↓{output_tokens} | {time_to_first_token*1000:.0f} ms to first token | {tokens_per_second:.0f} tok/sec | {total_time:.2f}s total")
 
     final_content = ""
-    if SHOW_THINKING and reasoning_content:
+    # Only add reasoning content for thinking model and when SHOW_THINKING is enabled
+    if body.get("model") == MODEL_NAME_THINKING and SHOW_THINKING and reasoning_content:
         final_content += f"<details><summary>Reasoning</summary>\n\n{reasoning_content}\n\n</details>\n\n"
     final_content += full_content
 
@@ -146,7 +153,7 @@ async def stream_aggregator(body: dict):
         "id": response_id,
         "object": "chat.completion.chunk",
         "created": created_time,
-        "model": model_name or MODEL_NAME,
+        "model": model_name or body.get("model") or MODEL_NAME_THINKING,
         "choices": [
             {
                 "index": 0,
@@ -167,12 +174,14 @@ async def stream_aggregator(body: dict):
 @app.post("/v1/chat/completions")
 async def chat_completions(request: Request):
     """
-    Proxies the request to LongCat-Flash-Thinking, always requesting a stream.
+    Proxies the request to LongCat-Flash-Thinking or LongCat-Flash-Chat, always requesting a stream.
     The stream is then aggregated into a single chunk and sent back as a
     single-element stream for Xcode compatibility.
     """
     body = await request.json()
-    body["model"] = MODEL_NAME
+    # Validate model selection
+    if body.get("model") not in [MODEL_NAME_THINKING, MODEL_NAME_FLASH]:
+        body["model"] = MODEL_NAME_THINKING  # Default to thinking model
     body["stream"] = True  # Always request a stream from LongCat.
     body["max_tokens"] = MAX_TOKENS
 
@@ -183,3 +192,4 @@ async def chat_completions(request: Request):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True, log_level="info")
+    
