@@ -1,8 +1,9 @@
 # LongCat-Xcode Bridge
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Free Quota: 500k tokens/day](https://img.shields.io/badge/Free%20Quota-500k%20tokens%2Fday-brightgreen)](https://longcat.chat/platform/usage)
 
-A lightweight proxy server that makes the LongCat API (specifically the `longcat-flash-thinking` model) compatible with Xcode 26's local AI model feature.
+A lightweight proxy server that makes the LongCat API (specifically the `longcat-flash-thinking` and `longcat-flash-chat` models) compatible with Xcode 26's local AI model feature.
 
 ## The Problem
 
@@ -17,10 +18,11 @@ This bridge acts as a middleman:
 
 ## Features
 
--   **Xcode 26 Compatibility:** Enables the use of `longcat-flash-thinking` directly within Xcode.
+-   **Xcode 26 Compatibility:** Enables the use of `longcat-flash-thinking` and `longcat-flash-chat` directly within Xcode.
 -   **Zero-Configuration:** Works out of the box by setting one environment variable.
 -   **Lightweight & Fast:** Built with FastAPI and Uvicorn for minimal overhead.
 -   **Stream Aggregation:** Intelligently handles API stream differences between LongCat and Xcode.
+-   **Enhanced Statistics:** Displays detailed performance metrics in the terminal including model name, token counts, response times, and processing speed.
 
 ## Prerequisites
 
@@ -72,16 +74,36 @@ uv run main.py
 4.  Give it a descriptive name, like "Local LongCat Bridge".
 5.  Click **Add**.
 
-You can now select the `longcat-flash-thinking` model for code completion and other Intelligence features in Xcode.
+You can now select either the `longcat-flash-thinking` or `longcat-flash-chat` models for code completion and other Intelligence features in Xcode.
+
+## Statistics Output
+
+The bridge displays detailed performance metrics in the terminal for each request:
+
+```
+INFO:     LongCat-Flash-Thinking | Tokens: 3531 ↑1362 ↓2169 | 3326 ms to first token | 103 tok/sec | 20.96s total
+```
+
+The statistics include:
+- **Model name** used for the request
+- **Token counts**: Total tokens, input tokens (↑), and output tokens (↓)
+- **Time to first token**: How long it took to receive the first response
+- **Processing speed**: Tokens per second
+- **Total time**: Overall request duration
+
+## 🎁 Free tier update
+
+500k tokens/day by default; [You can visit the Usage to apply for an increase in your free tokens quota](https://longcat.chat/platform/usage) and get **5M tokens/day** for free while the beta lasts.
 
 ## About LongCat & Useful Links
 
-For those unfamiliar, LongCat is a family of large language models developed by Meituan. They are designed to be powerful, efficient, and capable of handling a wide range of tasks. This bridge specifically uses the `longcat-flash-thinking` model, which is optimized for speed and code-related tasks.
+For those unfamiliar, LongCat is a family of large language models developed by Meituan. They are designed to be powerful, efficient, and capable of handling a wide range of tasks. This bridge specifically uses the `longcat-flash-thinking` and `longcat-flash-chat` models, which are optimized for speed and code-related tasks.
 
 Here are some official links to learn more:
 
 -   **[LongCat on GitHub](https://github.com/meituan-longcat):** The official source code and repositories.
--   **[LongCat on Hugging Face](https://huggingface.co/meituan-longcat):** Models, datasets, and demos.
+-   **[LongCat-Flash-Thinking on Hugging Face](https://huggingface.co/meituan-longcat/LongCat-Flash-Thinking):** The official model page for LongCat-Flash-Thinking.
+-   **[LongCat-Flash-Chat on Hugging Face](https://huggingface.co/meituan-longcat/LongCat-Flash-Chat):** The official model page for LongCat-Flash-Chat.
 -   **[Platform Documentation](https://longcat.chat/platform/docs/):** Official guides and documentation for the LongCat platform.
 -   **[API Usage Dashboard](https://longcat.chat/platform/usage/):** Monitor your API token usage.
 
