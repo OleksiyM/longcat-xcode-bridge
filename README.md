@@ -24,7 +24,7 @@ This bridge acts as a middleman:
 
 ## Prerequisites
 
--   Python 3.8+
+-   Python 3.10+
 -   `uv` (a fast Python package installer and resolver)
 -   A LongCat API Key
 
