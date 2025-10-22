@@ -87,20 +87,12 @@ async def stream_aggregator(body: dict):
                         usage = u
 
     except httpx.HTTPStatusError as e:
-        yield f"data: {json.dumps({'error': e.response.text})}
-
-"
-        yield "data: [DONE]
-
-"
-        return
+        print(f"Upstream HTTP error: {e.response.status_code} - {e.response.text}")
+        return  # End the stream if the upstream fails.
 
     if not response_id:
         print("Did not receive any valid data from upstream API")
         return
-
-    if not finish_reason:
-        finish_reason = "stop"
 
     final_content = ""
     if SHOW_THINKING and reasoning_content:
@@ -126,6 +118,7 @@ async def stream_aggregator(body: dict):
 
     # Yield a fake stream.
     yield f"data: {json.dumps(single_chunk)}\n\n"
+    await asyncio.sleep(0.01)  # A small delay for reliability.
     yield "data: [DONE]\n\n"
 
 
@@ -147,4 +140,4 @@ async def chat_completions(request: Request):
 # ---------- App Launch ----------
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True, log_level="warning")
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
