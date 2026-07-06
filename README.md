@@ -15,7 +15,7 @@
 > 
 > See: [LongCat ChangeLog](https://longcat.chat/platform/docs/ChangeLog.html)
 
-A lightweight proxy server that makes the LongCat API (specifically the `longcat-2.0` model) compatible with Xcode 26's local AI model feature.
+A lightweight proxy server that makes the LongCat API (specifically the `LongCat-2.0` model) compatible with Xcode 26's local AI model feature.
 
 ## The Problem
 
@@ -30,7 +30,7 @@ This bridge acts as a middleman:
 
 ## Features
 
--   **Xcode 26 Compatibility:** Enables the use of `longcat-2.0` directly within Xcode.
+-   **Xcode 26 Compatibility:** Enables the use of `LongCat-2.0` directly within Xcode.
 -   **Zero-Configuration:** Works out of the box by setting one environment variable.
 -   **Lightweight & Fast:** Built with FastAPI and Uvicorn for minimal overhead.
 -   **Stream Aggregation:** Intelligently handles API stream differences between LongCat and Xcode.
@@ -92,11 +92,11 @@ uv run main.py
 4.  Give it a descriptive name, like "Local LongCat Bridge".
 5.  Click **Add**.
 
-You can now select the `longcat-2.0` model for code completion and other Intelligence features in Xcode.
+You can now select the `LongCat-2.0` model for code completion and other Intelligence features in Xcode.
 
 ## Statistics Output
 
-The bridge displays detailed performance metrics in the terminal for each request:
+The bridge displays compact performance metrics in the terminal for each request:
 
 ```
 INFO:     LongCat-2.0 | Tokens: 3531 ↑1362 ↓2169 | 3326 ms to first token | 103 tok/sec | 20.96s total
