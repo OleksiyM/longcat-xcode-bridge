@@ -11,7 +11,7 @@ app = FastAPI(title="LongCat-2.0 ↔ Xcode 26+ bridge")
 # ---------- Settings ----------
 REAL_BASE   = os.getenv("LONGCAT_BASE", "https://api.longcat.chat/openai")
 API_KEY     = os.getenv("LONGCAT_API_KEY", "")
-MODEL_NAME = "longcat-2.0"
+MODEL_NAME = "LongCat-2.0"
 MAX_TOKENS  = 8192
 SHOW_THINKING = False
 
@@ -82,7 +82,14 @@ async def stream_aggregator(body: dict):
                         created_time = chunk.get("created")
                         model_name = chunk.get("model")
 
-                    choice = chunk.get("choices", [{}])[0]
+                    # Extract usage even when choices is empty (LongCat-2.0 specific)
+                    if u := chunk.get("usage"):
+                        usage = u
+
+                    choices = chunk.get("choices", [])
+                    if not choices:
+                        continue
+                    choice = choices[0]
                     if delta := choice.get("delta"):
                         if content_part := delta.get("content"):
                             full_content += content_part
@@ -93,9 +100,6 @@ async def stream_aggregator(body: dict):
 
                     if fr := choice.get("finish_reason"):
                         finish_reason = fr
-                    
-                    if u := chunk.get("usage"):
-                        usage = u
 
     except httpx.HTTPStatusError as e:
         print(f"Upstream HTTP error: {e.response.status_code} - {e.response.text}")
@@ -136,8 +140,8 @@ async def stream_aggregator(body: dict):
     else:
         tokens_per_second = 0
 
-    # Print compact statistics to console with INFO prefix and tabulation
-    print(f"INFO:     Model: {model_name or body.get('model') or MODEL_NAME} | Tokens: {total_tokens} ↑{input_tokens} ↓{output_tokens} | {time_to_first_token*1000:.0f} ms to first token | {tokens_per_second:.0f} tok/sec | {total_time:.2f}s total")
+    # Print compact statistics to console
+    print(f"INFO:     {model_name or body.get('model') or MODEL_NAME} | Tokens: {total_tokens} ↑{input_tokens} ↓{output_tokens} | {time_to_first_token*1000:.0f} ms to first token | {tokens_per_second:.0f} tok/sec | {total_time:.2f}s total")
 
     final_content = ""
     # Add reasoning content for LongCat-2.0 when SHOW_THINKING is enabled
@@ -176,11 +180,16 @@ async def chat_completions(request: Request):
     single-element stream for Xcode compatibility.
     """
     body = await request.json()
-    # Validate model selection
-    if body.get("model") != MODEL_NAME:
-        body["model"] = MODEL_NAME  # Default to LongCat-2.0
+    # Validate model selection (case-insensitive, but always send correct case to API)
+    if body.get("model", MODEL_NAME).lower() != MODEL_NAME.lower():
+        print(f"⚠️ Unknown model '{body.get('model')}', defaulting to {MODEL_NAME}")
+    body["model"] = MODEL_NAME  # Always use correct case for API
     body["stream"] = True  # Always request a stream from LongCat.
     body["max_tokens"] = MAX_TOKENS
+    
+    # LongCat-2.0: disable thinking by default for Xcode compatibility
+    if "thinking" not in body:
+        body["thinking"] = {"type": "disabled"}
 
     return StreamingResponse(stream_aggregator(body), media_type="text/event-stream")
 
