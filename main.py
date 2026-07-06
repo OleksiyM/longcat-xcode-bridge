@@ -35,11 +35,12 @@ class Config:
     API_KEY = os.getenv("LONGCAT_API_KEY", "")
     
     # Feature toggles
-    MODEL_NAME = os.getenv("MODEL_NAME", "longcat-2.0")
+    MODEL_NAME = os.getenv("MODEL_NAME", "LongCat-2.0")
     
     MAX_TOKENS = int(os.getenv("MAX_TOKENS", "8192"))
     SHOW_THINKING = os.getenv("SHOW_THINKING", "false").lower() == "true"
     DEBUG_MODE = os.getenv("DEBUG_MODE", "false").lower() == "true"
+    THINKING_ENABLED = os.getenv("THINKING_ENABLED", "false").lower() == "true"
     
     # Rate limiting
     MAX_CONCURRENT = int(os.getenv("MAX_CONCURRENT_REQUESTS", "10"))
@@ -219,7 +220,8 @@ async def stream_aggregator(body: dict, client_ip: str = "unknown"):
                         if Config.DEBUG_MODE:
                             debug_log.append(f"Chunk: {json.dumps(chunk, indent=2)}")
                     except json.JSONDecodeError as e:
-                        print(f"⚠️ JSON parse error: {e}")
+                        if Config.DEBUG_MODE:
+                            print(f"⚠️ JSON parse error: {e}")
                         continue
 
                     # Record first token timing
@@ -231,7 +233,14 @@ async def stream_aggregator(body: dict, client_ip: str = "unknown"):
                         created_time = chunk.get("created")
                         model_name = chunk.get("model")
 
-                    choice = chunk.get("choices", [{}])[0]
+                    # Extract usage even when choices is empty (LongCat-2.0 sends usage in final chunk with empty choices)
+                    if u := chunk.get("usage"):
+                        usage = u
+
+                    choices = chunk.get("choices", [])
+                    if not choices:
+                        continue
+                    choice = choices[0]
                     if delta := choice.get("delta"):
                         if content_part := delta.get("content"):
                             full_content += content_part
@@ -244,9 +253,6 @@ async def stream_aggregator(body: dict, client_ip: str = "unknown"):
 
                     if fr := choice.get("finish_reason"):
                         finish_reason = fr
-                    
-                    if u := chunk.get("usage"):
-                        usage = u
 
     except httpx.HTTPStatusError as e:
         print(f"❌ HTTP error {e.response.status_code}: {e.response.text}")
@@ -306,16 +312,8 @@ async def stream_aggregator(body: dict, client_ip: str = "unknown"):
     # Speed
     processing_speed = (output_tokens / total_time) if total_time > 0 else 0
     
-    # Console output with formatting
-    print("-" * 80)
-    print(f"📈 Request Stats:")
-    print(f"   Model: {model_name or body.get('model')}")
-    print(f"   Tokens: {total_tokens:>4} (↑{input_tokens:>4} | ↓{output_tokens:>4})")
-    print(f"   Speed: {processing_speed:>5.1f} tok/sec | Time to 1st: {time_to_first_token*1000:>5.0f}ms | Total: {total_time:>5.2f}s")
-    print(f"   Status: {finish_reason or 'unknown'}")
-    if Config.DEBUG_MODE:
-        print(f"   Debug Log: {json.dumps(debug_log[:3], indent=2)[:200]}...")
-    print("-" * 80)
+    # Compact single-line stats
+    print(f"INFO:     {model_name or body.get('model')} | Tokens: {total_tokens} ↑{input_tokens} ↓{output_tokens} | {time_to_first_token*1000:.0f} ms to first token | {processing_speed:.0f} tok/sec | {total_time:.2f}s total")
 
     # ========== Build response ==========
     final_content = ""
@@ -370,18 +368,20 @@ async def chat_completions(request: Request, client_ip: Optional[str] = None):
     else:
         client_ip = request.client.host if request.client else "unknown"
 
-    # Validate model
+    # Validate model (case-insensitive, but always send correct case to API)
     requested_model = body.get("model", Config.MODEL_NAME)
-    if requested_model != Config.MODEL_NAME:
+    if requested_model.lower() != Config.MODEL_NAME.lower():
         print(f"⚠️ Unknown model '{requested_model}', defaulting to {Config.MODEL_NAME}")
-        body["model"] = Config.MODEL_NAME
+    body["model"] = Config.MODEL_NAME  # Always use correct case for API
 
     # Force stream mode
     body["stream"] = True
     body["max_tokens"] = Config.MAX_TOKENS
     
-    # Remove unsupported parameters (for compatibility)
-    body.pop("temperature", None)  # LongCat might have different defaults
+    # LongCat-2.0: configure thinking mode
+    # By default thinking is disabled for Xcode compatibility
+    if "thinking" not in body:
+        body["thinking"] = {"type": "enabled" if Config.THINKING_ENABLED else "disabled"}
     
     return StreamingResponse(
         stream_aggregator(body, client_ip),
