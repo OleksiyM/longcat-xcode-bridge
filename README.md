@@ -1,7 +1,7 @@
 # LongCat-Xcode Bridge
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Free Quota: 500k tokens/day](https://img.shields.io/badge/Free%20Quota-500k%20tokens%2Fday-lightgrey)](https://longcat.chat/platform/usage)
+[![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-blue.svg)](https://github.com/OleksiyM/longcat-xcode-bridge/releases)
 
 > ⚠️ **Important Update (July 1, 2026)**
 > 
