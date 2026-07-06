@@ -23,7 +23,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="LongCat-2.0 ↔ Xcode 26+ bridge",
-    version="0.2.0",
+    version="1.0.0",
     lifespan=lifespan
 )
 
@@ -108,7 +108,7 @@ async def root():
     return {
         "status": "online",
         "service": "LongCat-Xcode Bridge",
-        "version": "0.2.0",
+        "version": "1.0.0",
         "models_available": [Config.MODEL_NAME]
     }
 
@@ -417,7 +417,7 @@ if __name__ == "__main__":
     
     # Log startup info
     print("=" * 60)
-    print("🚀 LongCat-Xcode Bridge v0.2.0")
+    print("🚀 LongCat-Xcode Bridge v1.0.0")
     print("=" * 60)
     print(f"📍 Base URL: {Config.REAL_BASE}")
     print(f"🔐 API Key: {'✓ Configured' if Config.API_KEY else '❌ MISSING'}")
